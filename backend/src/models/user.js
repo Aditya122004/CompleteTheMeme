@@ -11,11 +11,6 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-
-        hasAttempted: {
-            type: Boolean,
-            default: false
-        }
     },
     {
         timestamps: true
