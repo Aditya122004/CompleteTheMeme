@@ -24,5 +24,9 @@ router.post(
     protect,
     submitQuiz
 );
-
+router.post(
+    "/check-answer",
+    protect,
+    checkAnswer
+);
 module.exports = router;
