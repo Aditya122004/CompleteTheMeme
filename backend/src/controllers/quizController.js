@@ -173,5 +173,6 @@ const submitQuiz = async (req, res) => {
 
 module.exports={
     getQuestions,
-    submitQuiz
+    submitQuiz,
+    checkAnswer
 }

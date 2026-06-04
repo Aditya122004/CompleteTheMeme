@@ -2,7 +2,8 @@ const express = require("express");
 
 const {
     getQuestions,
-    submitQuiz
+    submitQuiz,
+    checkAnswer
 } = require(
     "../controllers/quizController"
 );
