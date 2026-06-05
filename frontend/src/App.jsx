@@ -7,6 +7,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage    from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import WelcomePage  from "./pages/WelcomePage";
+import QuizPage     from "./pages/QuizPage";
+import FinishPage   from "./pages/FinishPage";
 
 export default function App() {
   return (
@@ -22,14 +24,15 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
 
             {/* Protected routes */}
-            <Route
-              path="/welcome"
-              element={
-                <ProtectedRoute>
-                  <WelcomePage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/welcome" element={
+              <ProtectedRoute><WelcomePage /></ProtectedRoute>
+            } />
+            <Route path="/quiz" element={
+              <ProtectedRoute><QuizPage /></ProtectedRoute>
+            } />
+            <Route path="/finish" element={
+              <ProtectedRoute><FinishPage /></ProtectedRoute>
+            } />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/login" replace />} />

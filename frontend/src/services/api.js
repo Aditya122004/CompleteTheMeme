@@ -41,4 +41,25 @@ export const registerUser = (username, password) =>
 export const loginUser = (username, password) =>
   api.post("/api/auth/login", { username, password });
 
+// ── Quiz endpoints ─────────────────────────────────────────────
+
+/** Fetch all quiz questions */
+export const getQuestions = () =>
+  api.get("/api/quiz/questions");
+
+/**
+ * Check a single answer.
+ * @param {string} questionId
+ * @param {string} answer
+ */
+export const checkAnswer = (questionId, answer) =>
+  api.post("/api/quiz/check-answer", { questionId, answer });
+
+/**
+ * Submit all answers for scoring.
+ * @param {Array<{questionId: string, answer: string}>} answers
+ */
+export const submitQuiz = (answers) =>
+  api.post("/api/quiz/submit", { answers });
+
 export default api;

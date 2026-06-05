@@ -15,16 +15,16 @@ export default function WelcomePage() {
     <div
       className="board-bg"
       style={{
-        minHeight: "100vh",
+        height: "100dvh", // Exact viewport lock
+        boxSizing: "border-box",
+        overflow: "hidden", // Prevent any layout or window scrolling
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        gap: "2rem",
-        padding: "2rem",
+        padding: "1.5rem",
       }}
     >
-      {/* Decorative piece */}
       <span
         aria-hidden="true"
         className="piece-watermark"
@@ -35,6 +35,8 @@ export default function WelcomePage() {
           fontSize: "320px",
           lineHeight: 1,
           zIndex: 0,
+          userSelect: "none",
+          pointerEvents: "none",
         }}
       >
         💀
@@ -43,16 +45,19 @@ export default function WelcomePage() {
       <div
         className="card fade-up"
         style={{
-          maxWidth: "480px",
+          maxWidth: "520px",
           width: "100%",
-          padding: "3rem 2.5rem",
+          padding: "2.5rem 2rem",
           textAlign: "center",
           position: "relative",
           zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1.25rem", // Standardizes the inner gap between components cleanly
         }}
       >
-        {/* Crown icon */}
-        <div style={{ fontSize: "3rem", marginBottom: "1.25rem" }}>🐸</div>
+        <div style={{ fontSize: "3.5rem", lineHeight: 1 }}>🐸</div>
 
         <h1
           style={{
@@ -60,7 +65,7 @@ export default function WelcomePage() {
             fontSize: "2.8rem",
             fontWeight: 400,
             color: "var(--color-text-primary)",
-            margin: "0 0 0.5rem",
+            margin: 0,
             letterSpacing: "0.06em",
             textTransform: "uppercase",
             lineHeight: 1.1,
@@ -73,59 +78,32 @@ export default function WelcomePage() {
           !
         </h1>
 
-        <p
-          style={{
-            fontFamily: "var(--font-ui)",
-            fontSize: "0.8rem",
-            color: "var(--color-text-secondary)",
-            margin: "0 0 2rem",
-            lineHeight: 1.7,
-            letterSpacing: "0.02em",
-          }}
+        {/* Start button */}
+        <button
+          className="btn-primary"
+          onClick={() => navigate("/quiz")}
+          style={{ margin: 0, width: "100%" }}
         >
-          You're in. The memes are set, the clock is ticking.
-          <br />
-          Your quiz will appear here.
-        </p>
-
-        {/* Placeholder — quiz content goes here */}
-        <div
-          style={{
-            border: "1px dashed var(--color-border)",
-            borderRadius: "var(--radius-md)",
-            padding: "1.5rem",
-            color: "var(--color-text-muted)",
-            fontFamily: "var(--font-ui)",
-            fontSize: "0.875rem",
-            marginBottom: "2rem",
-          }}
-        >
-          🧩 Quiz content coming soon…
-        </div>
+          START QUIZ
+        </button>
 
         <button
           onClick={handleLogout}
           style={{
             background: "none",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-md)",
-            color: "var(--color-text-secondary)",
+            border: "none",
+            color: "var(--color-text-muted)",
             fontFamily: "var(--font-ui)",
-            fontSize: "0.875rem",
-            padding: "0.6rem 1.25rem",
+            fontSize: "0.7rem",
             cursor: "pointer",
-            transition: "border-color var(--transition), color var(--transition)",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-accent)";
-            e.currentTarget.style.color = "var(--color-accent)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-border)";
-            e.currentTarget.style.color = "var(--color-text-secondary)";
+            letterSpacing: "0.04em",
+            padding: "0.25rem",
+            textDecoration: "underline",
+            textUnderlineOffset: "3px",
+            margin: 0,
           }}
         >
-          Sign out
+          sign out
         </button>
       </div>
     </div>
