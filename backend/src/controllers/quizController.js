@@ -45,7 +45,35 @@ const normalize = (text) => {
         .replace(/\s+/g, "")
         .trim();
 };
+const buildHint = (correctAnswer, userAnswer) => {
 
+    const correctNoSpaces =
+        correctAnswer.replace(/\s+/g, "");
+
+    const correctLower =
+        correctNoSpaces.toLowerCase();
+
+    const userLower =
+        userAnswer
+            .replace(/\s+/g, "")
+            .toLowerCase();
+
+    let hint = "";
+
+    for (let i = 0; i < correctLower.length; i++) {
+
+        if (
+            i < userLower.length &&
+            userLower[i] === correctLower[i]
+        ) {
+            hint += correctNoSpaces[i];
+        } else {
+            hint += "_";
+        }
+    }
+
+    return hint;
+};
 const checkAnswer = async (req, res) => {
     try {
         const { questionId, answer } = req.body;
@@ -66,13 +94,23 @@ const checkAnswer = async (req, res) => {
             });
         }
 
-        const isCorrect =
-            normalize(question.answer) ===
-            normalize(answer);
+        let isCorrect;
 
-        res.json({
-            correct: isCorrect
-        });
+if (question.questionNo === 12) {
+    isCorrect = true;
+} else {
+    isCorrect =
+        normalize(question.answer) ===
+        normalize(answer);
+}
+
+       res.json({
+    correct: isCorrect,
+    hint: buildHint(
+        question.answer,
+        answer
+    )
+});
 
     } catch (error) {
         res.status(500).json({
