@@ -30,7 +30,6 @@ export default function FinishPage() {
           zIndex: 0,
         }}
       >
-        💀
       </span>
 
       <div
@@ -46,7 +45,6 @@ export default function FinishPage() {
       >
         {/* Confetti-ish emoji row */}
         <div style={{ fontSize: "2.2rem", marginBottom: "1.25rem", letterSpacing: "0.2em" }}>
-          🎉🐸🎉
         </div>
 
         <h1

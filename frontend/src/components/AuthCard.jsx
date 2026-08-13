@@ -39,7 +39,6 @@ export default function AuthCard({ title, subtitle, children, animClass = "fade-
           userSelect: "none",
         }}
       >
-        💀
       </span>
 
       <div
@@ -63,7 +62,6 @@ export default function AuthCard({ title, subtitle, children, animClass = "fade-
               marginBottom: "1.1rem",
             }}
           >
-            <span style={{ fontSize: "2rem", lineHeight: 1 }}>🐸</span>
             <span
               style={{
                 fontFamily: "var(--font-display)",
@@ -74,7 +72,7 @@ export default function AuthCard({ title, subtitle, children, animClass = "fade-
                 textTransform: "uppercase",
               }}
             >
-              CompleteTheMeme
+              Complete The Meme
             </span>
           </div>
 

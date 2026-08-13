@@ -39,7 +39,6 @@ export default function WelcomePage() {
           pointerEvents: "none",
         }}
       >
-        💀
       </span>
 
       <div
@@ -57,7 +56,6 @@ export default function WelcomePage() {
           gap: "1.25rem", // Standardizes the inner gap between components cleanly
         }}
       >
-        <div style={{ fontSize: "3.5rem", lineHeight: 1 }}>🐸</div>
 
         <h1
           style={{

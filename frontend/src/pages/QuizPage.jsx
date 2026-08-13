@@ -375,7 +375,7 @@ export default function QuizPage() {
       {/* ── Header ── */}
       <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2rem", height: "64px", borderBottom: "1px solid var(--color-border)", background: "var(--color-bg-surface)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "1.25rem" }}>🐸</span>
+          <span style={{ fontSize: "1.25rem" }}></span>
           <span style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", color: "var(--color-accent)", letterSpacing: "0.06em", textTransform: "uppercase" }}>CompleteTheMeme</span>
         </div>
         <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
