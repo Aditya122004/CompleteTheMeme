@@ -24,22 +24,13 @@ api.interceptors.request.use((config) => {
 // ── Auth endpoints ─────────────────────────────────────────────
 
 /**
- * Register a new user.
- * @param {string} username
+ * Log in with roll number and password.
+ * @param {string} rollNo
  * @param {string} password
- * @returns {Promise<AxiosResponse>}
+ * @returns {Promise<AxiosResponse>} — response.data contains { token, user: { rollNo, ... } }
  */
-export const registerUser = (username, password) =>
-  api.post("/api/auth/register", { username, password });
-
-/**
- * Log in with credentials.
- * @param {string} username
- * @param {string} password
- * @returns {Promise<AxiosResponse>} — response.data should contain { token, ... }
- */
-export const loginUser = (username, password) =>
-  api.post("/api/auth/login", { username, password });
+export const loginUser = (rollNo, password) =>
+  api.post("/api/auth/login", { rollNo, password });
 
 // ── Quiz endpoints ─────────────────────────────────────────────
 

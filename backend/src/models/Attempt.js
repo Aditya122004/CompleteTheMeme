@@ -5,19 +5,27 @@ const attemptSchema = new mongoose.Schema(
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            unique: true
         },
 
         answers: [
             {
                 question: {
                     type: mongoose.Schema.Types.ObjectId,
-                    ref: "Question"
+                    ref: "Question",
+                    required: true
                 },
 
-                userAnswer: String,
+                userAnswer: {
+                    type: String,
+                    default: ""
+                },
 
-                isCorrect: Boolean
+                isCorrect: {
+                    type: Boolean,
+                    required: true
+                }
             }
         ],
 

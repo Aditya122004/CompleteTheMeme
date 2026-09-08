@@ -76,8 +76,44 @@ export const themes = {
     "--bg-dot-color":         "#c9a84c22",
   },
 
+  arcade: {
+    // Light cream base — like an arcade cabinet bezel
+    "--color-bg-base":        "#f0ece3",   // warm off-white
+    "--color-bg-surface":     "#faf7f2",   // lightest — nav/header
+    "--color-bg-elevated":    "#ffffff",   // pure white cards
+    "--color-bg-input":       "#f5f1ea",   // slightly warm input bg
+
+    "--color-border":         "#d4ccc0",   // soft warm grey
+    "--color-border-focus":   "#e6003a",   // arcade red focus ring
+
+    "--color-text-primary":   "#1a1a1a",   // near-black
+    "--color-text-secondary": "#5a5248",   // warm mid-grey
+    "--color-text-muted":     "#9e9488",   // dim warm
+
+    "--color-accent":         "#e6003a",   // classic arcade red
+    "--color-accent-hover":   "#ff1a50",   // brighter red on hover
+    "--color-accent-text":    "#ffffff",   // white on red buttons
+
+    "--color-error":          "#e6003a",
+    "--color-error-bg":       "#fff0f2",
+    "--color-success":        "#00a651",   // 1UP green
+
+    "--font-display":         "'Press Start 2P', monospace",
+    "--font-body":            "'DM Sans', system-ui, sans-serif",
+    "--font-ui":              "'DM Sans', system-ui, sans-serif",
+
+    "--radius-sm":            "6px",
+    "--radius-md":            "10px",
+    "--radius-lg":            "16px",
+
+    "--transition":           "0.1s ease",
+    "--shadow-card":          "4px 4px 0px #1a1a1a",   // hard shadow = arcade depth
+    "--shadow-input-focus":   "0 0 0 3px rgba(230,0,58,0.2)",
+
+    "--bg-dot-color":         "#d4ccc055",
+  },
+
   // ── Add more themes here ────────────────────────────────────────
-  // pastel: { "--color-bg-base": "#fef9f0", ... },
 };
 
 /** The active theme key — change this to switch themes */

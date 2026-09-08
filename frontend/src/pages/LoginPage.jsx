@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { loginUser } from "../services/api";
 import useForm from "../hooks/useForm";
@@ -42,8 +42,8 @@ const EyeIcon = ({ open }) => open ? (
 // ── Validation ─────────────────────────────────────────────────
 function validate(values) {
   const errors = {};
-  if (!values.username.trim())       errors.username = "Username is required";
-  if (!values.password)              errors.password = "Password is required";
+  if (!values.rollNo.trim()) errors.rollNo = "Roll number is required";
+  if (!values.password)      errors.password = "Password is required";
   return errors;
 }
 
@@ -56,31 +56,28 @@ export default function LoginPage() {
 
   const { values, errors, isSubmitting, handleChange, handleBlur, handleSubmit, setFieldError } =
     useForm(
-      { username: "", password: "" },
+      { rollNo: "", password: "" },
       validate,
       async (vals) => {
         setApiError("");
         try {
-          const res = await loginUser(vals.username.trim(), vals.password);
-          // Expect { token: "...", username: "..." } or similar
-          const token    = res.data?.token || res.data?.accessToken || res.data?.jwt;
-          const username = res.data?.username || vals.username.trim();
+          const res   = await loginUser(vals.rollNo.trim(), vals.password);
+          const token = res.data?.token;
+          const rollNo = res.data?.user?.rollNo || vals.rollNo.trim();
 
           if (!token) {
             setApiError("Unexpected server response — no token received.");
             return;
           }
 
-          login(token, { username });
+          login(token, { rollNo });
           navigate("/welcome");
         } catch (err) {
           const status  = err.response?.status;
-          const message = err.response?.data?.message || err.response?.data?.error;
+          const message = err.response?.data?.message;
 
-          if (status === 401 || status === 403) {
-            setFieldError("password", "Invalid username or password");
-          } else if (status === 404) {
-            setFieldError("username", "No account found with that username");
+          if (status === 401) {
+            setApiError(message || "Invalid credentials");
           } else if (message) {
             setApiError(message);
           } else {
@@ -92,12 +89,11 @@ export default function LoginPage() {
 
   return (
     <AuthCard
-      title="Welcome back"
-      subtitle="Make your move — the board awaits"
+      title="Player Login"
+      subtitle="Enter your roll number to play"
     >
-      <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+      <form onSubmit={handleSubmit} noValidate autoComplete="off" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
-        {/* Global API error banner */}
         {apiError && (
           <div
             className="fade-up"
@@ -117,16 +113,16 @@ export default function LoginPage() {
 
         <div className="fade-up-delay-1 fade-up">
           <InputField
-            id="username"
-            name="username"
-            label="Username"
-            placeholder="e.g. GrandMaster99"
-            autoComplete="username"
+            id="rollNo"
+            name="rollNo"
+            label="Roll Number"
+            placeholder=""
+            autoComplete="off"
             autoFocus
-            value={values.username}
+            value={values.rollNo}
             onChange={handleChange}
             onBlur={handleBlur}
-            error={errors.username}
+            error={errors.rollNo}
             icon={<UserIcon />}
           />
         </div>
@@ -137,8 +133,8 @@ export default function LoginPage() {
             name="password"
             type={showPw ? "text" : "password"}
             label="Password"
-            placeholder="Your secret key"
-            autoComplete="current-password"
+            placeholder=""
+            autoComplete="new-password"
             value={values.password}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -149,14 +145,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPw((p) => !p)}
                 aria-label={showPw ? "Hide password" : "Show password"}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  color: "inherit",
-                  display: "flex",
-                }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit", display: "flex" }}
               >
                 <EyeIcon open={showPw} />
               </button>
@@ -164,36 +153,12 @@ export default function LoginPage() {
           />
         </div>
 
-        <div className="fade-up-delay-3 fade-up" style={{ marginTop: "0.25rem" }}>
+        <div className="fade-up-delay-3 fade-up" style={{ marginTop: "0.75rem" }}>
           <Button type="submit" loading={isSubmitting}>
-            {isSubmitting ? "Signing in…" : "Sign In"}
+            {isSubmitting ? "Signing in..." : "Sign In"}
           </Button>
         </div>
       </form>
-
-      <p
-        className="fade-up-delay-4 fade-up"
-        style={{
-          textAlign: "center",
-          marginTop: "1.5rem",
-          fontFamily: "var(--font-ui)",
-          fontSize: "0.875rem",
-          color: "var(--color-text-secondary)",
-        }}
-      >
-        New player?{" "}
-        <Link
-          to="/register"
-          style={{
-            color: "var(--color-accent)",
-            textDecoration: "underline",
-            textUnderlineOffset: "3px",
-            fontWeight: 500,
-          }}
-        >
-          Create an account
-        </Link>
-      </p>
     </AuthCard>
   );
 }

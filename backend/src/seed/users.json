@@ -1,0 +1,15 @@
+[
+  {
+    "rollNo": "106123001",
+    "email": "student1@example.com",
+    "phoneNumber": "9876543210"
+  },
+  {
+    "rollNo": "106123002",
+    "email": "student2@example.com",
+    "phoneNumber": "9876543211"
+  },
+  {
+    "rollNo": "106123003"
+  }
+]
