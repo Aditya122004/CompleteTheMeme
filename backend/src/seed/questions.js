@@ -9,16 +9,16 @@ module.exports = [
   {
     questionNo: 2,
     type: "input",
-    question: "Guess the Meme",
+    question: "Complete The Meme 'Yeh Bik gyi hai _'",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423432/2_cw5d3f.jpg",
-    answer: "Ye Bik gyi hai Gormint"
+    answer: "Gormint"
   },
   {
     questionNo: 3,
     type: "input",
-    question: "Complete the Meme - Malik _ _ _ ho gayi",
+    question: "Complete the Meme - 'Malik wo thoda sa _ ho gayi'",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423432/3_mknncz.jpg",
-    answer: "thoda sa galti"
+    answer: "galti"
   },
    {
     questionNo: 4,
@@ -51,7 +51,7 @@ module.exports = [
   {
     questionNo: 8,
     type: "input",
-    question: "Complete the punchline by this iconic comedian Haan Yeh _ _",
+    question: "Complete the punchline by this iconic comedian 'Haan Yeh _ _'",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423429/8_i9m3jd.jpg",
     answer: "karlo pehle"
   },
@@ -71,7 +71,7 @@ module.exports = [
   {
     questionNo: 10,
     type: "input",
-    question: "Complete the meme. Goli _ _ nahi",
+    question: "Complete the meme 'Goli _ _ nahi'",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423429/10_vcyvwk.jpg",
     answer: "beta masti"
   },
@@ -115,7 +115,7 @@ module.exports = [
    {
     questionNo: 16,
     type: "input",
-    question: "Who is this iconic ScriptWriter?.",
+    question: "Who is this iconic ScriptWriter?",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423427/16_lekpp1.jpg",
     answer: "Jay Shah"
   },
@@ -136,9 +136,9 @@ module.exports = [
    {
     questionNo: 19,
     type: "input",
-    question: "Guess the Jingle of this famous brand",
+    question: "Guess the Jingle of this famous brand 'Mentos Dimag ki _ _ de'",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423427/19_lkdchp.jpg",
-    answer: "Dimag ki batti jala de"
+    answer: "batti jala"
   },
    {
     questionNo: 20,
@@ -177,7 +177,7 @@ module.exports = [
   {
     questionNo: 24,
     type:"input",
-    question:"Complete The Meme - Aap _ Samajhaiye",
+    question:"Complete The Meme 'Aap _ Samajhaiye'",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1789405879/24_lpbmp1.jpg",
     answer: "Chronology"
   },
@@ -189,6 +189,4 @@ module.exports = [
     answer: "Dolly Chaiwala"
   }
   
-
-
 ];

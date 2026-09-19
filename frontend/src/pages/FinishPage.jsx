@@ -93,7 +93,6 @@ export default function FinishPage() {
           </span>
           .<br />
           Your answers have been submitted.<br />
-          Scores are with the host only.
         </p>
 
         <div style={{
@@ -111,16 +110,6 @@ export default function FinishPage() {
         >
           BACK TO HOME
         </button>
-
-        <p style={{
-          fontFamily: "var(--font-ui)",
-          fontSize: "0.72rem",
-          color: "var(--color-text-muted)",
-          margin: 0,
-          lineHeight: 1.6,
-        }}>
-          You can only attempt the quiz once.
-        </p>
       </div>
     </div>
   );

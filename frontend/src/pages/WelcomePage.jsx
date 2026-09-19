@@ -108,7 +108,6 @@ export default function WelcomePage() {
           lineHeight: 1.7,
         }}>
           The memes are loaded. The clock is armed.<br />
-          One shot. No retries.
         </p>
 
         {/* Rules strip */}
@@ -151,7 +150,7 @@ export default function WelcomePage() {
           onClick={() => navigate("/quiz")}
           style={{ marginBottom: "1.25rem" }}
         >
-          INSERT COIN
+          START QUIZ
         </button>
 
         <button

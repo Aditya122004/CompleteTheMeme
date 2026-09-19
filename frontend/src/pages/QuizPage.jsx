@@ -392,7 +392,7 @@ export default function QuizPage() {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: hasImage ? "1fr 460px" : "1fr", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "grid", gridTemplateColumns: hasImage ? "1fr 580px" : "1fr", overflow: "hidden" }}>
 
         {/* Image panel */}
         {hasImage && (
@@ -417,7 +417,7 @@ export default function QuizPage() {
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "0.65rem", color: "var(--color-text-muted)", letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 0.5rem" }}>
               Question {currentIdx + 1}
             </p>
-            <h2 style={{ fontFamily: "var(--font-display)", fontSize: hasImage ? "1.85rem" : "2.8rem", fontWeight: 400, color: "var(--color-text-primary)", margin: 0, letterSpacing: "0.04em", textTransform: "uppercase", lineHeight: 1.15 }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: hasImage ? "2rem" : "2.8rem", fontWeight: 400, color: "var(--color-text-primary)", margin: 0, letterSpacing: "0.04em", textTransform: "uppercase", lineHeight: 1.2, wordBreak: "keep-all", overflowWrap: "normal", hyphens: "none" }}>
               {currentQ.question}
             </h2>
           </div>
