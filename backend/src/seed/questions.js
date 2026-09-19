@@ -147,6 +147,48 @@ module.exports = [
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423426/20_slu8bl.jpg",
     answer: "Just do it"
   },
+  {
+    questionNo: 21,
+    type:"mcq",
+    question:"Where is this boy telling to look?",
+    imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1789385440/Piche_to_dekho_qgtnpa.jpg",
+    options:[
+        "Aage", "Piche","Daein","Baein"
+    ],
+    answer: "Piche"
+  },
+  {
+    questionNo: 22,
+    type:"mcq",
+    question:"Paisa Ya Pehchan?",
+    imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1789391674/22_ssz1mh.jpg",
+    options:[
+        "Paisa","Pehchan"
+    ],
+    answer: "Pehchan"
+  },
+  {
+    questionNo: 23,
+    type:"input",
+    question:"Identify The Reality Show",
+    imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1789391675/23_lm33lm.jpg",
+    answer: "Shark Tank"
+  },
+  {
+    questionNo: 24,
+    type:"input",
+    question:"Complete The Meme - Aap _ Samajhaiye",
+    imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1789405879/24_lpbmp1.jpg",
+    answer: "Chronology"
+  },
+  {
+     questionNo: 25,
+    type:"input",
+    question:"Identify The famous Personality [Left]",
+    imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1789406588/25_ynydu1.jpg",
+    answer: "Dolly Chaiwala"
+  }
+  
 
 
 ];
