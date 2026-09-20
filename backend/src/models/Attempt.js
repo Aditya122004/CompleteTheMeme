@@ -5,8 +5,7 @@ const attemptSchema = new mongoose.Schema(
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
-            unique: true
+            required: true
         },
 
         answers: [
@@ -39,7 +38,7 @@ const attemptSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model(
-    "Attempt",
-    attemptSchema
-);
+attemptSchema.index({ score: -1, createdAt: 1 });
+attemptSchema.index({ user: 1, score: -1 });
+
+module.exports = mongoose.model("Attempt", attemptSchema);

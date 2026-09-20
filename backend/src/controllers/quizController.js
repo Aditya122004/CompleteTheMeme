@@ -1,52 +1,16 @@
-const Question = require("../models/Question");
 const Attempt = require("../models/Attempt");
-const User = require("../models/user");
 
-const getQuestions = async (req, res) => {
-    try {
-        const questions = await Question.find()
-            .sort({ questionNo: 1 });
+const {
+    getPublicQuestions,
+    getQuestionById,
+    normalize
+} = require("../utils/quizCache");
 
-        const formattedQuestions = questions.map(
-            (question) => ({
-                _id: question._id,
-                questionNo: question.questionNo,
-                question: question.question,
-                type: question.type,
-                imageUrl: question.imageUrl,
-                options: question.options,
-
-                answerPattern: question.answer
-                    .split("")
-                    .map((char) =>
-                        char === " " ? " " : "_"
-                    )
-                    .join(""),
-
-                answerLength:
-                    question.answer.length
-            })
-        );
-
-        res.json(formattedQuestions);
-
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        });
-    }
+const getQuestions = (req, res) => {
+    res.json(getPublicQuestions());
 };
 
-
-
-const normalize = (text) => {
-    return text
-        ?.toLowerCase()
-        .replace(/\s+/g, "")
-        .trim();
-};
 const buildHint = (correctAnswer, userAnswer) => {
-
     const correctNoSpaces =
         correctAnswer.replace(/\s+/g, "");
 
@@ -61,7 +25,6 @@ const buildHint = (correctAnswer, userAnswer) => {
     let hint = "";
 
     for (let i = 0; i < correctLower.length; i++) {
-
         if (
             i < userLower.length &&
             userLower[i] === correctLower[i]
@@ -74,19 +37,12 @@ const buildHint = (correctAnswer, userAnswer) => {
 
     return hint;
 };
+
 const checkAnswer = async (req, res) => {
     try {
         const { questionId, answer } = req.body;
 
-        if (!questionId || !answer) {
-            return res.status(400).json({
-                message: "Question ID and answer are required"
-            });
-        }
-
-        const question = await Question.findById(
-            questionId
-        );
+        const question = getQuestionById(questionId);
 
         if (!question) {
             return res.status(404).json({
@@ -94,30 +50,26 @@ const checkAnswer = async (req, res) => {
             });
         }
 
-        let isCorrect;
+        const isCorrect =
+            question.questionNo === 12 ||
+            question.normalizedAnswer === normalize(answer);
 
-if (question.questionNo === 12) {
-    isCorrect = true;
-} else {
-    isCorrect =
-        normalize(question.answer) ===
-        normalize(answer);
-}
+        const hint = isCorrect
+            ? ""
+            : buildHint(question.answer, answer);
 
-       res.json({
-    correct: isCorrect,
-    hint: buildHint(
-        question.answer,
-        answer
-    )
-});
+        return res.json({
+            correct: isCorrect,
+            hint
+        });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         });
     }
 };
+
 const submitQuiz = async (req, res) => {
     try {
         const { answers } = req.body;
@@ -127,90 +79,56 @@ const submitQuiz = async (req, res) => {
                 message: "Invalid answers payload"
             });
         }
-        const existingAttempt =
-            await Attempt.findOne({
-                user: req.user._id
-            });
-
-        if (existingAttempt) {
-            return res.status(400).json({
-                message:
-                    "Quiz already submitted"
-            });
-        }
-
-        const questionIds = answers.map(
-            (item) => item.questionId
-        );
-
-        const questions =
-            await Question.find({
-                _id: { $in: questionIds }
-            });
-
-        const questionMap = {};
-
-        questions.forEach((question) => {
-            questionMap[
-                question._id.toString()
-            ] = question;
-        });
 
         let score = 0;
+        const evaluatedAnswers = [];
 
-        const processedAnswers = [];
+        for (const submitted of answers) {
+            const question = getQuestionById(
+                submitted.questionId
+            );
 
-        for (const item of answers) {
-
-            const question =
-                questionMap[item.questionId];
-
-            if (!question) continue;
+            if (!question) {
+                continue;
+            }
 
             const isCorrect =
-                normalize(
-                    question.answer
-                ) ===
-                normalize(item.answer);
+                question.questionNo === 12 ||
+                question.normalizedAnswer ===
+                    normalize(submitted.answer);
 
             if (isCorrect) {
                 score += question.points;
             }
 
-            processedAnswers.push({
-                question:
-                    question._id,
-                userAnswer:
-                    item.answer,
+            evaluatedAnswers.push({
+                question: question._id,
+                userAnswer: submitted.answer,
                 isCorrect
             });
         }
-
         await Attempt.create({
-            user: req.user._id,
-            answers:
-                processedAnswers,
+            user: req.user.id,
+            answers: evaluatedAnswers,
             score
         });
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
-            message:
-                "Quiz submitted successfully"
+            message: "Quiz submitted successfully"
         });
 
     } catch (error) {
+        console.error("Quiz submission error:", error);
 
-        console.error(error);
-
-        res.status(500).json({
-            message: "Server Error"
+        return res.status(500).json({
+            message: error.message
         });
     }
 };
 
-module.exports={
+module.exports = {
     getQuestions,
     submitQuiz,
     checkAnswer
-}
+};

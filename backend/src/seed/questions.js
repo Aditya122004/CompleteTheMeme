@@ -37,7 +37,7 @@ module.exports = [
   {
     questionNo: 6,
     type: "input",
-    question: "What iconic animation style is this viral AI filter trying to mimic? _fication",
+    question: "What iconic animation style is this viral AI filter trying to mimic? '_fication'",
     imageUrl:"https://res.cloudinary.com/dlyrfukne/image/upload/v1780423430/6_dimguz.jpg",
     answer: "ghibli"
   },

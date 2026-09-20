@@ -164,7 +164,10 @@ export default function QuizPage() {
   const skipSubmit = useRef(false); // true while hint is being applied
 
   const currentQ = questions[currentIdx];
-  const segments = currentQ ? parsePattern(currentQ.answerPattern) : [];
+ const segments =
+    currentQ?.type === "input"
+        ? parsePattern(currentQ.answerPattern || "")
+        : [];
   const hasImage = Boolean(currentQ?.imageUrl);
 
   // ── Fetch ────────────────────────────────────────────────────
@@ -177,6 +180,7 @@ export default function QuizPage() {
   // ── Reset per question ───────────────────────────────────────
   useEffect(() => {
     if (!currentQ) return;
+
     clearInterval(timerRef.current);
     setTimeLeft(QUESTION_TIME);
     setFeedback(null);
@@ -185,9 +189,14 @@ export default function QuizPage() {
     setMcqLocked(false);
     skipSubmit.current = false;
     charRefs.current = [];
-    const segs = parsePattern(currentQ.answerPattern);
-    setChars(buildCharArray(segs));
-  }, [currentIdx, currentQ]);
+
+    if (currentQ.type === "input") {
+        const segs = parsePattern(currentQ.answerPattern || "");
+        setChars(buildCharArray(segs));
+    } else {
+        setChars([]);
+    }
+}, [currentIdx, currentQ]);
 
   // ── Auto-focus first empty unlocked char ─────────────────────
   const focusFirstEmpty = useCallback((charArr) => {

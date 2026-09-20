@@ -1,51 +1,49 @@
-const User = require("../models/user");
-const generateToken = require("../utils/generateToken");
+const jwt = require("jsonwebtoken");
+
+const {
+    getUserByRollNo
+} = require("../utils/userCache");
 
 const login = async (req, res) => {
-  try {
-    const { rollNo, password } = req.body;
+    try {
+        const { rollNo, password } = req.body;
 
-    if (!rollNo || !password) {
-      return res.status(400).json({
-        message: "Roll number and password are required"
-      });
-    }
+        if (password !== process.env.QUIZ_PASSWORD) {
+            return res.status(401).json({
+                message: "Invalid credentials"
+            });
+        }
 
-    // Check common quiz password
-    if (password !== process.env.QUIZ_PASSWORD) {
-      return res.status(401).json({
-        message: "Invalid credentials"
-      });
-    }
+        const user = getUserByRollNo(rollNo);
 
-    // Check whether participant exists
-    const user = await User.findOne({ rollNo });
+        if (!user) {
+            return res.status(401).json({
+                message: "Invalid credentials"
+            });
+        }
 
-    if (!user) {
-      return res.status(401).json({
-        message: "Invalid credentials"
-      });
-    }
-
-    const token = generateToken(user._id);
-
-    res.status(200).json({
-      token,
-      user: {
+        const token = jwt.sign(
+    {
         id: user._id,
-        rollNo: user.rollNo,
-        email: user.email,
-        phoneNumber: user.phoneNumber
-      }
-    });
+        rollNo: user.rollNo
+    },
+    process.env.JWT_SECRET,
+    {
+        expiresIn: "1d"
+    }
+);
 
-  } catch (error) {
-    res.status(500).json({
-      message: error.message
-    });
-  }
+        res.json({
+            token
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
 };
 
 module.exports = {
-  login
+    login
 };
