@@ -29,7 +29,7 @@ const IconBrain = () => (
 );
 
 const rules = [
-  { Icon: IconTimer, label: "60 SEC",     sub: "per question" },
+  { Icon: IconTimer, label: "45 SEC",     sub: "per question" },
   { Icon: IconLock,  label: "1 ATTEMPT",  sub: "make it count" },
   { Icon: IconBrain, label: "MEME IQ",    sub: "being tested" },
 ];
