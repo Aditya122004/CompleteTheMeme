@@ -2,10 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getQuestions, checkAnswer, submitQuiz } from "../services/api";
 
-const QUESTION_TIME = 60;
+const QUESTION_TIME = 45;
 
-// ── Parse answerPattern ────────────────────────────────────────
-// "__ ___ _______" → [{type:"input",length:2}, {type:"space"}, {type:"input",length:3}, ...]
 function parsePattern(pattern) {
   const segments = [];
   const parts = pattern.split(" ");
@@ -31,21 +29,6 @@ function parsePattern(pattern) {
   return segments;
 }
 
-/**
- * Flat char array model
- *
- * We keep a single flat array `chars[]` where each index = one answer character.
- * Each cell: { value: string, locked: bool }
- *   - locked = true  → revealed by hint, user cannot change it
- *   - locked = false → user must fill it
- *
- * segments map to contiguous slices of this array (spaces/literals are skipped).
- *
- * buildCharArray(segments, totalLen) → initial chars (all empty, unlocked)
- * applyHint(chars, hint)            → new chars with locked revealed positions
- * buildAnswer(chars)                → concatenated string for API
- * isAllFilled(chars)                → true when every cell has a value
- */
 function buildCharArray(segments) {
   const chars = [];
   for (const seg of segments) {
@@ -60,14 +43,11 @@ function buildCharArray(segments) {
 
 function applyHint(chars, hintStr) {
   if (!hintStr) return chars;
-  // hint has no spaces — it's the raw concatenated answer with _ for blanks
   const hint = hintStr.replace(/\s/g, "");
   return chars.map((cell, i) => {
     const h = hint[i] ?? "_";
-    if (h !== "_") {
-      return { value: h, locked: true };   // revealed — lock it
-    }
-    return { ...cell, locked: false };      // still blank — keep user's value, unlock
+    if (h !== "_") return { value: h, locked: true };
+    return { ...cell, locked: false };
   });
 }
 
@@ -77,22 +57,6 @@ function buildAnswer(chars) {
 
 function isAllFilled(chars) {
   return chars.every(c => c.value !== "");
-}
-
-// ── Map flat char index → { segIdx, charInSeg } ───────────────
-// so we can map a flat ref index back to which segment + position it belongs to
-function buildIndexMap(segments) {
-  const map = []; // map[flatIdx] = { segIdx, posInSeg }
-  let flatIdx = 0;
-  segments.forEach((seg, si) => {
-    if (seg.type === "input") {
-      for (let p = 0; p < seg.length; p++) {
-        map.push({ segIdx: si, posInSeg: p });
-        flatIdx++;
-      }
-    }
-  });
-  return map;
 }
 
 // ── Timer ring ─────────────────────────────────────────────────
@@ -148,10 +112,7 @@ export default function QuizPage() {
   const [currentIdx,  setCurrentIdx]  = useState(0);
   const [timeLeft,    setTimeLeft]    = useState(QUESTION_TIME);
   const [answers,     setAnswers]     = useState({});
-
-  // flat char array for input questions
-  const [chars,       setChars]       = useState([]); // [{value, locked}]
-
+  const [chars,       setChars]       = useState([]);
   const [checking,    setChecking]    = useState(false);
   const [feedback,    setFeedback]    = useState(null);
   const [wrongShake,  setWrongShake]  = useState(false);
@@ -159,64 +120,83 @@ export default function QuizPage() {
   const [mcqLocked,   setMcqLocked]   = useState(false);
   const [submitting,  setSubmitting]  = useState(false);
 
-  const timerRef   = useRef(null);
-  const charRefs   = useRef([]);   // one ref per flat char index
-  const skipSubmit = useRef(false); // true while hint is being applied
+  const timerRef      = useRef(null);
+  const charRefs      = useRef([]);
+  const skipSubmit    = useRef(false);
+  const hasSubmitted  = useRef(false); // prevents double submission
+  const answersRef    = useRef({});    // mirrors answers state, readable in callbacks without stale closure
+  const timerExpired  = useRef(false); // prevents timer expiry effect from firing twice
 
   const currentQ = questions[currentIdx];
- const segments =
-    currentQ?.type === "input"
-        ? parsePattern(currentQ.answerPattern || "")
-        : [];
+  const segments = currentQ ? parsePattern(currentQ.answerPattern) : [];
   const hasImage = Boolean(currentQ?.imageUrl);
 
   // ── Fetch ────────────────────────────────────────────────────
   useEffect(() => {
     getQuestions()
-      .then(res => { setQuestions([...res.data].sort((a, b) => a.questionNo - b.questionNo)); setLoading(false); })
-      .catch(err => { setFetchError(err.response?.data?.message || "Failed to load questions."); setLoading(false); });
+      .then(res => {
+        const sorted = [...res.data].sort((a, b) => a.questionNo - b.questionNo);
+        setQuestions(sorted);
+        answersRef.current = {};
+        setLoading(false);
+      })
+      .catch(err => {
+        setFetchError(err.response?.data?.message || "Failed to load questions.");
+        setLoading(false);
+      });
   }, []);
 
   // ── Reset per question ───────────────────────────────────────
   useEffect(() => {
     if (!currentQ) return;
-
     clearInterval(timerRef.current);
     setTimeLeft(QUESTION_TIME);
+    timerExpired.current = false;
     setFeedback(null);
     setWrongShake(false);
     setMcqFeedback(null);
     setMcqLocked(false);
     skipSubmit.current = false;
     charRefs.current = [];
+    const segs = parsePattern(currentQ.answerPattern);
+    setChars(buildCharArray(segs));
+  }, [currentIdx, currentQ]);
 
-    if (currentQ.type === "input") {
-        const segs = parsePattern(currentQ.answerPattern || "");
-        setChars(buildCharArray(segs));
-    } else {
-        setChars([]);
-    }
-}, [currentIdx, currentQ]);
-
-  // ── Auto-focus first empty unlocked char ─────────────────────
+  // ── Focus helpers ─────────────────────────────────────────────
   const focusFirstEmpty = useCallback((charArr) => {
     const idx = charArr.findIndex(c => !c.locked && c.value === "");
-    if (idx !== -1) setTimeout(() => charRefs.current[idx]?.focus(), 60);
+    if (idx !== -1) setTimeout(() => charRefs.current[idx]?.focus(), 80);
+  }, []);
+
+  const focusLastFilled = useCallback((charArr) => {
+    let idx = -1;
+    for (let i = charArr.length - 1; i >= 0; i--) {
+      if (!charArr[i].locked && charArr[i].value !== "") { idx = i; break; }
+    }
+    if (idx === -1) idx = charArr.findIndex(c => !c.locked && c.value === "");
+    if (idx !== -1) setTimeout(() => charRefs.current[idx]?.focus(), 80);
   }, []);
 
   useEffect(() => {
-    if (currentQ?.type === "input") focusFirstEmpty(chars);
-  }, [currentIdx, currentQ]); // eslint-disable-line
+    if (currentQ?.type === "input" && chars.length > 0) focusFirstEmpty(chars);
+  }, [currentIdx, chars.length]); // eslint-disable-line
 
   // ── Finish ───────────────────────────────────────────────────
   const finishQuiz = useCallback(async (finalAnswers) => {
+    if (hasSubmitted.current) return; // synchronous guard — blocks any second call
+    hasSubmitted.current = true;
+    clearInterval(timerRef.current);
     setSubmitting(true);
-    const payload = questions.map(q => ({ questionId: q._id, answer: finalAnswers[q._id] ?? "" }));
-    try { await submitQuiz(payload); } catch (e) { console.error(e); }
+    const payload = questions.map(q => ({
+      questionId: q._id,
+      answer: finalAnswers[q._id] ?? ""
+    }));
+    try { await submitQuiz(payload); } catch (e) { console.error("Submit error:", e); }
     navigate("/finish");
   }, [questions, navigate]);
 
   const advance = useCallback((finalAnswers) => {
+    if (hasSubmitted.current) return;
     const next = currentIdx + 1;
     if (next >= questions.length) finishQuiz(finalAnswers);
     else setCurrentIdx(next);
@@ -226,20 +206,19 @@ export default function QuizPage() {
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          setAnswers(prev2 => {
-            const u = { ...prev2, [currentQ._id]: prev2[currentQ._id] ?? "" };
-            advance(u);
-            return u;
-          });
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft(prev => Math.max(prev - 1, 0));
     }, 1000);
-  }, [currentQ, advance]);
+  }, []);
+
+  // Timer expiry handled in a separate effect — keeps the state updater pure
+  useEffect(() => {
+    if (timeLeft !== 0 || !currentQ || submitting || timerExpired.current) return;
+    timerExpired.current = true;
+    clearInterval(timerRef.current);
+    const finalAnswers = { ...answersRef.current, [currentQ._id]: answersRef.current[currentQ._id] ?? "" };
+    answersRef.current = finalAnswers;
+    advance(finalAnswers);
+  }, [timeLeft, currentQ, submitting, advance]);
 
   useEffect(() => {
     if (loading || !currentQ || submitting) return;
@@ -257,13 +236,15 @@ export default function QuizPage() {
     try {
       const res     = await checkAnswer(currentQ._id, answerStr);
       const correct = res.data?.correct ?? false;
-      const hint    = res.data?.hint   ?? null;
+      const hint    = res.data?.hint    ?? null;
 
-      setAnswers(prev => ({ ...prev, [currentQ._id]: answerStr }));
+      const updatedAnswers = { ...answersRef.current, [currentQ._id]: answerStr };
+      answersRef.current = updatedAnswers;
+      setAnswers(updatedAnswers);
 
       if (correct) {
         setFeedback("correct");
-        setTimeout(() => setAnswers(prev2 => { advance(prev2); return prev2; }), 900);
+        setTimeout(() => advance(answersRef.current), 900);
         setChecking(false);
         return;
       }
@@ -273,29 +254,35 @@ export default function QuizPage() {
         skipSubmit.current = true;
         setChars(prev => {
           const updated = applyHint(prev, hint);
-          // Focus first empty unlocked cell after hint
-          const firstEmpty = updated.findIndex(c => !c.locked && c.value === "");
-          if (firstEmpty !== -1) setTimeout(() => charRefs.current[firstEmpty]?.focus(), 60);
+          setTimeout(() => focusLastFilled(updated), 80);
           return updated;
         });
+      } else {
+        setTimeout(() => focusLastFilled(charArr), 80);
       }
 
       setFeedback("wrong");
       setWrongShake(true);
       setTimeout(() => setWrongShake(false), 500);
-      setTimeout(() => setFeedback(null), 1400);
+      setTimeout(() => {
+        setFeedback(null);
+        setChars(prev => { focusLastFilled(prev); return prev; });
+      }, 1400);
 
-      // Resume timer
       startTimer();
 
     } catch {
       setFeedback("wrong");
       setWrongShake(true);
-      setTimeout(() => { setWrongShake(false); setFeedback(null); }, 1400);
+      setTimeout(() => setWrongShake(false), 500);
+      setTimeout(() => {
+        setFeedback(null);
+        setChars(prev => { focusLastFilled(prev); return prev; });
+      }, 1400);
       startTimer();
     }
     setChecking(false);
-  }, [checking, feedback, currentQ, advance, startTimer]);
+  }, [checking, feedback, currentQ, advance, startTimer, focusLastFilled]);
 
   // ── Auto-submit when all chars filled ───────────────────────
   useEffect(() => {
@@ -310,27 +297,25 @@ export default function QuizPage() {
     if (mcqLocked) return;
     clearInterval(timerRef.current);
     setMcqLocked(true);
-    setAnswers(prev => ({ ...prev, [currentQ._id]: option }));
+    const updatedAnswers = { ...answersRef.current, [currentQ._id]: option };
+    answersRef.current = updatedAnswers;
+    setAnswers(updatedAnswers);
     try {
       const res = await checkAnswer(currentQ._id, option);
       const correct = res.data?.correct ?? false;
       setMcqFeedback({ index: i, result: correct ? "correct" : "wrong" });
-      setTimeout(() => setAnswers(prev2 => { advance(prev2); return prev2; }), correct ? 900 : 1400);
+      setTimeout(() => advance(answersRef.current), correct ? 900 : 1400);
     } catch {
       setMcqFeedback({ index: i, result: "wrong" });
-      setTimeout(() => setAnswers(prev2 => { advance(prev2); return prev2; }), 1400);
+      setTimeout(() => advance(answersRef.current), 1400);
     }
   }, [mcqLocked, currentQ, advance]);
 
   // ── Per-char input handler ───────────────────────────────────
   const handleCharChange = useCallback((flatIdx, rawValue) => {
-    // Take only the last typed character (handles paste/autocorrect edge cases)
     const ch = rawValue.replace(/\s/g, "").slice(-1);
     setChars(prev => {
-      const next = prev.map((c, i) =>
-        i === flatIdx ? { ...c, value: ch } : c
-      );
-      // Auto-advance to next empty unlocked cell
+      const next = prev.map((c, i) => i === flatIdx ? { ...c, value: ch } : c);
       if (ch) {
         const nextEmpty = next.findIndex((c, i) => i > flatIdx && !c.locked && c.value === "");
         if (nextEmpty !== -1) setTimeout(() => charRefs.current[nextEmpty]?.focus(), 0);
@@ -343,11 +328,7 @@ export default function QuizPage() {
     if (e.key === "Backspace") {
       setChars(prev => {
         const cell = prev[flatIdx];
-        if (cell.value !== "") {
-          // Clear current cell
-          return prev.map((c, i) => i === flatIdx ? { ...c, value: "" } : c);
-        }
-        // Jump to prev unlocked cell and clear it
+        if (cell.value !== "") return prev.map((c, i) => i === flatIdx ? { ...c, value: "" } : c);
         for (let i = flatIdx - 1; i >= 0; i--) {
           if (!prev[i].locked) {
             charRefs.current[i]?.focus();
@@ -361,31 +342,28 @@ export default function QuizPage() {
   }, []);
 
   // ── Render guards ────────────────────────────────────────────
-  if (loading)    return <StatusScreen><Spinner /><StatusText>loading memes…</StatusText></StatusScreen>;
-  if (fetchError) return <StatusScreen><span style={{fontSize:"2.5rem"}}>💀</span><StatusText error>{fetchError}</StatusText></StatusScreen>;
-  if (submitting) return <StatusScreen><Spinner /><StatusText>submitting answers…</StatusText></StatusScreen>;
+  if (loading)    return <StatusScreen><Spinner /><StatusText>loading memes...</StatusText></StatusScreen>;
+  if (fetchError) return <StatusScreen><StatusText error>{fetchError}</StatusText></StatusScreen>;
+  if (submitting) return <StatusScreen><Spinner /><StatusText>submitting answers...</StatusText></StatusScreen>;
   if (!currentQ)  return null;
 
   const progressPct = (currentIdx / questions.length) * 100;
   const isCorrect   = feedback === "correct";
   const isWrong     = feedback === "wrong";
 
-  // Build flat index mapping once per render
-  const indexMap = buildIndexMap(segments); // indexMap[flatIdx] = {segIdx, posInSeg}
-
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-bg-base)", overflow: "hidden" }}>
 
-      {/* ── Progress bar ── */}
+      {/* Progress bar */}
       <div style={{ height: "3px", background: "var(--color-border)", flexShrink: 0, position: "relative" }}>
         <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${progressPct}%`, background: "var(--color-accent)", transition: "width 0.5s ease", boxShadow: "0 0 10px var(--color-accent)" }} />
       </div>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2rem", height: "64px", borderBottom: "1px solid var(--color-border)", background: "var(--color-bg-surface)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "0.9rem", color: "var(--color-accent)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Complete The Meme</span>
-        </div>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: "0.9rem", color: "var(--color-accent)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          The Meme Gambit
+        </span>
         <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
           {questions.map((_, i) => (
             <div key={i} style={{ height: "8px", width: i === currentIdx ? "24px" : "8px", borderRadius: "4px", background: i <= currentIdx ? "var(--color-accent)" : "var(--color-border)", opacity: i < currentIdx ? 0.4 : 1, transition: "all 0.35s ease", boxShadow: i === currentIdx ? "0 0 8px var(--color-accent)" : "none" }} />
@@ -400,7 +378,7 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* ── Body ── */}
+      {/* Body */}
       <div style={{ flex: 1, display: "grid", gridTemplateColumns: hasImage ? "1fr 580px" : "1fr", overflow: "hidden" }}>
 
         {/* Image panel */}
@@ -431,7 +409,7 @@ export default function QuizPage() {
             </h2>
           </div>
 
-          {/* ── MCQ ── */}
+          {/* MCQ */}
           {currentQ.type === "mcq" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem", flex: 1, width: "100%", maxWidth: hasImage ? "none" : "640px" }}>
               {currentQ.options.map((opt, i) => {
@@ -463,11 +441,9 @@ export default function QuizPage() {
             </div>
           )}
 
-          {/* ── Input ── */}
+          {/* Input */}
           {currentQ.type === "input" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", flex: 1, width: "100%", maxWidth: hasImage ? "none" : "640px" }}>
-
-              {/* Char-grid container */}
               <div style={{
                 padding: "1.5rem",
                 background: "var(--color-bg-input)",
@@ -482,40 +458,17 @@ export default function QuizPage() {
                 {(() => {
                   let flatIdx = 0;
                   return segments.map((seg, si) => {
-                    // Space between words
-                    if (seg.type === "space") return (
-                      <div key={`space-${si}`} style={{ width: "1rem" }} />
-                    );
-                    // Literal char
+                    if (seg.type === "space") return <div key={`space-${si}`} style={{ width: "1rem" }} />;
                     if (seg.type === "literal") return (
-                      <span key={`lit-${si}`} style={{ fontFamily: "var(--font-ui)", fontSize: "1.4rem", color: "var(--color-text-muted)", paddingBottom: "4px", letterSpacing: "0.05em" }}>
+                      <span key={`lit-${si}`} style={{ fontFamily: "var(--font-ui)", fontSize: "1.4rem", color: "var(--color-text-muted)", paddingBottom: "4px" }}>
                         {seg.char}
                       </span>
                     );
-
-                    // Input segment — render one cell per character
                     return Array.from({ length: seg.length }).map((_, pos) => {
                       const fi   = flatIdx++;
                       const cell = chars[fi] ?? { value: "", locked: false };
-
-                      const borderColor = isCorrect
-                        ? "var(--color-success)"
-                        : isWrong
-                        ? "var(--color-error)"
-                        : cell.locked
-                        ? "#ffaa00"                     // amber — hint-revealed
-                        : cell.value
-                        ? "var(--color-border-focus)"   // filled by user
-                        : "var(--color-border)";        // empty
-
-                      const textColor = isCorrect
-                        ? "var(--color-success)"
-                        : isWrong
-                        ? "var(--color-error)"
-                        : cell.locked
-                        ? "#ffaa00"
-                        : "var(--color-text-primary)";
-
+                      const borderColor = isCorrect ? "var(--color-success)" : isWrong ? "var(--color-error)" : cell.locked ? "#ffaa00" : cell.value ? "var(--color-border-focus)" : "var(--color-border)";
+                      const textColor   = isCorrect ? "var(--color-success)" : isWrong ? "var(--color-error)" : cell.locked ? "#ffaa00" : "var(--color-text-primary)";
                       return (
                         <input
                           key={`char-${fi}`}
@@ -523,27 +476,18 @@ export default function QuizPage() {
                           value={cell.value}
                           onChange={e => handleCharChange(fi, e.target.value)}
                           onKeyDown={e => handleCharKeyDown(fi, e)}
-                          maxLength={2} // allow 1 new char on top of existing
+                          maxLength={2}
                           disabled={cell.locked || checking || isCorrect}
                           autoComplete="off"
                           spellCheck={false}
                           style={{
-                            width:  "2.1ch",
-                            height: "2.8rem",
+                            width: "2.1ch", height: "2.8rem",
                             background: cell.locked ? "rgba(255,170,0,0.07)" : "transparent",
-                            border: "none",
-                            borderBottom: `2px solid ${borderColor}`,
-                            borderRadius: 0,
-                            color: textColor,
-                            fontFamily: "var(--font-ui)",
-                            fontSize: "1.3rem",
-                            letterSpacing: 0,
-                            textAlign: "center",
-                            padding: "0 0 0.35rem",
-                            outline: "none",
-                            transition: "border-color 0.15s, color 0.15s, background 0.15s",
-                            caretColor: "var(--color-accent)",
-                            cursor: cell.locked ? "default" : "text",
+                            border: "none", borderBottom: `2px solid ${borderColor}`, borderRadius: 0,
+                            color: textColor, fontFamily: "var(--font-ui)", fontSize: "1.3rem",
+                            letterSpacing: 0, textAlign: "center", padding: "0 0 0.35rem",
+                            outline: "none", transition: "border-color 0.15s, color 0.15s, background 0.15s",
+                            caretColor: "var(--color-accent)", cursor: cell.locked ? "default" : "text",
                           }}
                         />
                       );
@@ -556,7 +500,7 @@ export default function QuizPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minHeight: "28px" }}>
                 <FeedbackBadge feedback={feedback} />
                 {checking && !feedback && (
-                  <span style={{ fontFamily: "var(--font-ui)", fontSize: "0.7rem", color: "var(--color-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>checking…</span>
+                  <span style={{ fontFamily: "var(--font-ui)", fontSize: "0.7rem", color: "var(--color-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>checking...</span>
                 )}
                 {!checking && !feedback && (
                   <span style={{ fontFamily: "var(--font-ui)", fontSize: "0.7rem", color: "var(--color-text-muted)", letterSpacing: "0.04em" }}>

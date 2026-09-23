@@ -28,7 +28,7 @@ export default function AuthCard({ title, subtitle, children, animClass = "fade-
           color: "var(--color-accent)",
         }}
       >
-        💀
+        ♟
       </span>
 
       <div

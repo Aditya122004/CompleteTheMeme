@@ -50,28 +50,23 @@ export default function WelcomePage() {
       }}
     >
       {/* Arcade watermark SVG */}
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 200 200"
+      <span
         className="piece-watermark"
+        aria-hidden="true"
         style={{
           position: "fixed",
-          bottom: "-30px",
-          right: "-30px",
-          width: "340px",
-          height: "340px",
+          bottom: "-40px",
+          right: "-20px",
+          fontSize: "320px",
+          lineHeight: 1,
           zIndex: 0,
-          pointerEvents: "none",
+          userSelect: "none",
+          fontFamily: "var(--font-display)",
+          color: "var(--color-accent)",
         }}
       >
-        <rect x="20" y="100" width="160" height="80" rx="20" fill="currentColor" />
-        <rect x="55" y="115" width="30" height="50" rx="6" fill="var(--color-bg-elevated)" />
-        <circle cx="70" cy="108" r="14" fill="var(--color-bg-elevated)" />
-        <circle cx="130" cy="130" r="12" fill="var(--color-bg-elevated)" />
-        <circle cx="155" cy="145" r="10" fill="var(--color-bg-elevated)" />
-        <circle cx="130" cy="158" r="10" fill="var(--color-bg-elevated)" />
-        <circle cx="107" cy="145" r="10" fill="var(--color-bg-elevated)" />
-      </svg>
+        ♟
+      </span>
 
       <div
         className="card fade-up"
